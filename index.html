@@ -1,42 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>2D Gram-Schmidt Explorer</title>
 <style>
-  :root { --bg:#f5f7fb; --card:#fff; --ink:#182033; --muted:#697386; --u:#e55353; --v:#3b73e6; --up:#b52d2d; --vp:#2451ad; --accent:#6b4eff; --grid:#dce2ec; --axis:#7b8496; --ok:#158a55; }
+  :root { --bg:#f5f7fb; --card:#fff; --ink:#182033; --muted:#697386; --u:#e55353; --v:#3b73e6; --up:#b52d2d; --vp:#2451ad; --accent:#6b4eff; --grid:#dce2ec; --axis:#7b8496; --ok:#158a55; --border:#e5e9f1; --canvas:#fff; --step:#485267; --equation:#f4f1ff; --secondary:#e9edf5; --secondaryInk:#293247; }
+  :root[data-theme="dark"] { --bg:#111521; --card:#1b2130; --ink:#edf1fa; --muted:#aeb7c9; --u:#ff7070; --v:#6696ff; --up:#ff9a9a; --vp:#8bb0ff; --accent:#8b75ff; --grid:#30394b; --axis:#8d98ac; --ok:#48d497; --border:#30394b; --canvas:#151b28; --step:#cbd3e2; --equation:#292442; --secondary:#30394b; --secondaryInk:#edf1fa; }
   * { box-sizing:border-box; }
-  body { margin:0; font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--ink); }
+  html, body { min-height:100%; background:var(--bg); }
+  html { min-height:100vh; }
+  body { margin:0; min-height:100vh; font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--ink); transition:background .2s,color .2s; }
   .page { max-width:1180px; margin:auto; padding:28px 20px 44px; }
   h1 { margin:0; font-size:clamp(26px,4vw,40px); letter-spacing:-.03em; }
   .subtitle { color:var(--muted); margin:8px 0 24px; }
   .layout { display:grid; grid-template-columns:minmax(0, 1fr) 320px; gap:20px; align-items:start; }
-  .card { background:var(--card); border:1px solid #e5e9f1; border-radius:18px; box-shadow:0 8px 30px rgba(30,45,80,.07); }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:18px; box-shadow:0 8px 30px rgba(30,45,80,.07); }
   .graph-card { padding:14px; }
-  canvas { display:block; width:100%; aspect-ratio:1/1; border-radius:12px; background:#fff; touch-action:none; cursor:crosshair; }
+  canvas { display:block; width:100%; aspect-ratio:1/1; border-radius:12px; background:var(--canvas); touch-action:none; cursor:crosshair; }
   .side { display:grid; gap:16px; }
   .panel { padding:18px; }
   .panel h2 { font-size:17px; margin:0 0 14px; }
   .vectors { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  .vecbox { border:1px solid #e5e9f1; border-radius:12px; padding:11px; }
+  .vecbox { border:1px solid var(--border); border-radius:12px; padding:11px; }
   .vecname { font-weight:800; margin-bottom:7px; }
   .matrix { display:inline-grid; grid-template-rows:1fr 1fr; gap:2px; position:relative; padding:2px 11px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:15px; }
   .matrix:before,.matrix:after { content:""; position:absolute; top:0; bottom:0; width:6px; border-top:2px solid currentColor; border-bottom:2px solid currentColor; }
   .matrix:before { left:0; border-left:2px solid currentColor; } .matrix:after { right:0; border-right:2px solid currentColor; }
-  .muted { color:#a0a7b5; }
+  .muted { color:var(--muted); opacity:.72; }
   .steps { min-height:182px; }
   .step-title { font-weight:800; font-size:18px; margin-bottom:9px; }
-  .step-text { color:#485267; line-height:1.5; }
-  .equation { margin-top:13px; padding:11px 12px; border-radius:10px; background:#f4f1ff; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px; line-height:1.5; overflow-wrap:anywhere; }
+  .step-text { color:var(--step); line-height:1.5; }
+  .equation { margin-top:13px; padding:11px 12px; border-radius:10px; background:var(--equation); font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px; line-height:1.5; overflow-wrap:anywhere; }
   .hint { margin-top:10px; font-size:13px; color:var(--muted); }
   .controls { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
   button { appearance:none; border:0; border-radius:11px; padding:11px 15px; font-weight:800; font-size:14px; cursor:pointer; transition:.15s transform,.15s opacity; }
   button:hover { transform:translateY(-1px); } button:active { transform:none; }
-  .primary { background:var(--accent); color:white; } .secondary { background:#e9edf5; color:#293247; }
+  .primary { background:var(--accent); color:white; } .secondary { background:var(--secondary); color:var(--secondaryInk); }
   .legend { display:flex; flex-wrap:wrap; gap:12px; padding:12px 4px 2px; font-size:12px; color:var(--muted); }
   .dot { width:10px; height:10px; display:inline-block; border-radius:50%; margin-right:5px; vertical-align:-1px; }
   .status { font-weight:800; color:var(--ok); }
+  .visibility-controls { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:12px; }
+  .visibility-toggle { padding:9px 10px; border:1px solid var(--border); background:var(--secondary); color:var(--secondaryInk); }
+  .visibility-toggle[aria-pressed="true"] { background:var(--accent); color:white; border-color:transparent; }
   @media(max-width:850px){ .layout{grid-template-columns:1fr}.side{grid-template-columns:1fr 1fr}.steps-panel{grid-column:1/-1} }
   @media(max-width:570px){ .side{grid-template-columns:1fr}.steps-panel{grid-column:auto}.vectors{grid-template-columns:1fr 1fr} }
 </style>
@@ -54,6 +60,17 @@
       </div>
     </div>
     <div class="side">
+      <section class="card panel theme-panel">
+        <h2>Appearance</h2>
+        <button id="themeToggle" class="secondary" type="button" aria-pressed="true">☀️ Light mode</button>
+        <div class="visibility-controls" aria-label="Graph visibility controls">
+          <button id="toggleU" class="visibility-toggle" type="button" aria-pressed="true">U: On</button>
+          <button id="toggleV" class="visibility-toggle" type="button" aria-pressed="true">V: On</button>
+          <button id="toggleUp" class="visibility-toggle" type="button" aria-pressed="true">U′: On</button>
+          <button id="toggleVp" class="visibility-toggle" type="button" aria-pressed="true">V′: On</button>
+          <button id="toggleGuides" class="visibility-toggle" type="button" aria-pressed="true" style="grid-column:1/-1">Dotted lines: On</button>
+        </div>
+      </section>
       <section class="card panel">
         <h2>Vector values</h2>
         <div class="vectors">
@@ -85,6 +102,7 @@ const c=document.getElementById('graph'),ctx=c.getContext('2d');
 const $=id=>document.getElementById(id), els={uMat:$('uMat'),vMat:$('vMat'),upMat:$('upMat'),vpMat:$('vpMat'),title:$('stepTitle'),text:$('stepText'),eq:$('equation'),hint:$('hint')};
 const RANGE=3, SNAP=.16, HIT=.18;
 let U,V,Up=null,Vp=null,phase='setup',drag=null,choice=null,projectTarget=null,projectBase=null,projectPoint=null,normDone={projected:false,base:false};
+const visible={U:true,V:true,Up:true,Vp:true,guides:true};
 const mag=a=>Math.hypot(a.x,a.y), dot=(a,b)=>a.x*b.x+a.y*b.y, scale=(a,s)=>({x:a.x*s,y:a.y*s}), sub=(a,b)=>({x:a.x-b.x,y:a.y-b.y}), dist=(a,b)=>mag(sub(a,b)), unit=a=>scale(a,1/mag(a));
 function randomVec(){let a,m;do{a=Math.random()*Math.PI*2;m=1.3+Math.random()*1.5;}while(m>=2.8);return {x:Math.cos(a)*m,y:Math.sin(a)*m};}
 function reset(){ do{U=randomVec();V=randomVec();}while(Math.abs(dot(unit(U),unit(V)))>.92); Up=Vp=null; phase='setup';drag=choice=projectTarget=projectBase=projectPoint=null;normDone={projected:false,base:false}; $('startBtn').disabled=false;$('startBtn').style.opacity=1; setStep('Ready to begin','Begin by clicking <b>Orthogonalization Process</b>.','Before starting, U and V can be freely repositioned.');update(); }
@@ -98,9 +116,9 @@ function lineThrough(dir,color='#8e96a8'){let d=unit(dir),A=xyToPx(scale(d,-5)),
 function segment(a,b,color='#8e96a8'){a=xyToPx(a);b=xyToPx(b);ctx.save();ctx.strokeStyle=color;ctx.lineWidth=2;ctx.setLineDash([8,8]);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.restore();}
 function circleAt(a,color){let p=xyToPx(a),r=c.width/(2*RANGE);ctx.save();ctx.strokeStyle=color;ctx.globalAlpha=.28;ctx.lineWidth=8;ctx.beginPath();ctx.arc(p.x,p.y,13,0,Math.PI*2);ctx.stroke();ctx.restore();}
 function draw(){ctx.clearRect(0,0,c.width,c.height);let s=c.width/(2*RANGE);ctx.font='14px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';for(let i=-RANGE;i<=RANGE;i++){let x=xyToPx({x:i,y:0}).x,y=xyToPx({x:0,y:i}).y;ctx.strokeStyle=i===0?'#7b8496':'#dce2ec';ctx.lineWidth=i===0?2:1;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,c.height);ctx.stroke();ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(c.width,y);ctx.stroke();if(i!==0){ctx.fillStyle='#7b8496';ctx.fillText(i,x,xyToPx({x:0,y:0}).y+18);ctx.fillText(i,xyToPx({x:0,y:0}).x-18,y);}}
- if(projectBase&&phase!=='setup'&&phase!=='choose'){let perp={x:-projectBase.y,y:projectBase.x};lineThrough(perp);segment(projectTarget,projectPoint);let pp=xyToPx(projectPoint);ctx.fillStyle='#8e96a8';ctx.beginPath();ctx.arc(pp.x,pp.y,6,0,Math.PI*2);ctx.fill();}
- arrow(U,'#e55353','U',false,phase==='setup'?1:.38);arrow(V,'#3b73e6','V',false,phase==='setup'?1:.38);
- if(Up)arrow(Up,'#b52d2d','U′'); if(Vp)arrow(Vp,'#2451ad','V′');
+ if(visible.guides&&projectBase&&phase!=='setup'&&phase!=='choose'){let perp={x:-projectBase.y,y:projectBase.x};lineThrough(perp);segment(projectTarget,projectPoint);let pp=xyToPx(projectPoint);ctx.fillStyle='#8e96a8';ctx.beginPath();ctx.arc(pp.x,pp.y,6,0,Math.PI*2);ctx.fill();}
+ if(visible.U)arrow(U,'#e55353','U',false,phase==='setup'?1:.38);if(visible.V)arrow(V,'#3b73e6','V',false,phase==='setup'?1:.38);
+ if(Up&&visible.Up)arrow(Up,'#b52d2d','U′'); if(Vp&&visible.Vp)arrow(Vp,'#2451ad','V′');
  if(phase==='normalize'){circleAt(unit(projectPoint),choice==='U'?'#b52d2d':'#2451ad');circleAt(unit(projectBase),choice==='U'?'#2451ad':'#b52d2d');}
 }
 function update(){updateMats();draw();}
@@ -121,7 +139,39 @@ function pointerMove(e){if(!drag)return;let p=pxToXy(e.clientX,e.clientY);p.x=Ma
  else if(drag==='projectedNorm'){let d=unit(projectPoint),t=Math.max(.15,dot(p,d));let q=scale(d,t);setProjected(q);normalizeCheck('projected',q)}
  else if(drag==='baseNorm'){let d=unit(projectBase),t=Math.max(.15,dot(p,d));let q=scale(d,t);setBasePrime(q);normalizeCheck('base',q)} update();}
 function pointerUp(){drag=null}
-c.addEventListener('pointerdown',pointerDown);c.addEventListener('pointermove',pointerMove);c.addEventListener('pointerup',pointerUp);c.addEventListener('pointercancel',pointerUp);$('startBtn').onclick=start;$('resetBtn').onclick=reset;window.addEventListener('resize',draw);reset();
+c.addEventListener('pointerdown',pointerDown);c.addEventListener('pointermove',pointerMove);c.addEventListener('pointerup',pointerUp);c.addEventListener('pointercancel',pointerUp);$('startBtn').onclick=start;$('resetBtn').onclick=reset;window.addEventListener('resize',draw);
+const visibilityButtons=[
+  ['toggleU','U','U'],['toggleV','V','V'],['toggleUp','Up','U′'],['toggleVp','Vp','V′'],['toggleGuides','guides','Dotted lines']
+];
+visibilityButtons.forEach(([id,key,label])=>{
+  const b=$(id);
+  b.addEventListener('click',()=>{
+    visible[key]=!visible[key];
+    b.setAttribute('aria-pressed',String(visible[key]));
+    b.textContent=`${label}: ${visible[key]?'On':'Off'}`;
+    draw();
+  });
+});
+reset();
+})();
+</script>
+<script>
+(() => {
+  const root=document.documentElement, btn=document.getElementById('themeToggle');
+  const saved=localStorage.getItem('gram-schmidt-theme');
+  if(saved==='light') delete root.dataset.theme; else root.dataset.theme='dark';
+  function sync(){
+    const dark=root.dataset.theme==='dark';
+    btn.textContent=dark?'☀️ Light mode':'🌙 Dark mode';
+    btn.setAttribute('aria-pressed',String(dark));
+  }
+  btn.addEventListener('click',()=>{
+    const dark=root.dataset.theme==='dark';
+    if(dark) delete root.dataset.theme; else root.dataset.theme='dark';
+    localStorage.setItem('gram-schmidt-theme',dark?'light':'dark');
+    sync();
+  });
+  sync();
 })();
 </script>
 </body>
