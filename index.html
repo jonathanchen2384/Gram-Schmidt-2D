@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>2D Gram-Schmidt Explorer</title>
+<style>
+  :root { --bg:#f5f7fb; --card:#fff; --ink:#182033; --muted:#697386; --u:#e55353; --v:#3b73e6; --up:#b52d2d; --vp:#2451ad; --accent:#6b4eff; --grid:#dce2ec; --axis:#7b8496; --ok:#158a55; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--ink); }
+  .page { max-width:1180px; margin:auto; padding:28px 20px 44px; }
+  h1 { margin:0; font-size:clamp(26px,4vw,40px); letter-spacing:-.03em; }
+  .subtitle { color:var(--muted); margin:8px 0 24px; }
+  .layout { display:grid; grid-template-columns:minmax(0, 1fr) 320px; gap:20px; align-items:start; }
+  .card { background:var(--card); border:1px solid #e5e9f1; border-radius:18px; box-shadow:0 8px 30px rgba(30,45,80,.07); }
+  .graph-card { padding:14px; }
+  canvas { display:block; width:100%; aspect-ratio:1/1; border-radius:12px; background:#fff; touch-action:none; cursor:crosshair; }
+  .side { display:grid; gap:16px; }
+  .panel { padding:18px; }
+  .panel h2 { font-size:17px; margin:0 0 14px; }
+  .vectors { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .vecbox { border:1px solid #e5e9f1; border-radius:12px; padding:11px; }
+  .vecname { font-weight:800; margin-bottom:7px; }
+  .matrix { display:inline-grid; grid-template-rows:1fr 1fr; gap:2px; position:relative; padding:2px 11px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:15px; }
+  .matrix:before,.matrix:after { content:""; position:absolute; top:0; bottom:0; width:6px; border-top:2px solid currentColor; border-bottom:2px solid currentColor; }
+  .matrix:before { left:0; border-left:2px solid currentColor; } .matrix:after { right:0; border-right:2px solid currentColor; }
+  .muted { color:#a0a7b5; }
+  .steps { min-height:182px; }
+  .step-title { font-weight:800; font-size:18px; margin-bottom:9px; }
+  .step-text { color:#485267; line-height:1.5; }
+  .equation { margin-top:13px; padding:11px 12px; border-radius:10px; background:#f4f1ff; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13px; line-height:1.5; overflow-wrap:anywhere; }
+  .hint { margin-top:10px; font-size:13px; color:var(--muted); }
+  .controls { display:flex; gap:10px; flex-wrap:wrap; margin-top:18px; }
+  button { appearance:none; border:0; border-radius:11px; padding:11px 15px; font-weight:800; font-size:14px; cursor:pointer; transition:.15s transform,.15s opacity; }
+  button:hover { transform:translateY(-1px); } button:active { transform:none; }
+  .primary { background:var(--accent); color:white; } .secondary { background:#e9edf5; color:#293247; }
+  .legend { display:flex; flex-wrap:wrap; gap:12px; padding:12px 4px 2px; font-size:12px; color:var(--muted); }
+  .dot { width:10px; height:10px; display:inline-block; border-radius:50%; margin-right:5px; vertical-align:-1px; }
+  .status { font-weight:800; color:var(--ok); }
+  @media(max-width:850px){ .layout{grid-template-columns:1fr}.side{grid-template-columns:1fr 1fr}.steps-panel{grid-column:1/-1} }
+  @media(max-width:570px){ .side{grid-template-columns:1fr}.steps-panel{grid-column:auto}.vectors{grid-template-columns:1fr 1fr} }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>2D Gram–Schmidt Explorer</h1>
+  <p class="subtitle">Drag vectors, visualize projection, and construct an orthonormal basis step by step.</p>
+  <div class="layout">
+    <div class="card graph-card">
+      <canvas id="graph" width="760" height="760" aria-label="Interactive 2D vector graph"></canvas>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--u)"></i>U</span><span><i class="dot" style="background:var(--v)"></i>V</span>
+        <span><i class="dot" style="background:var(--up)"></i>U′</span><span><i class="dot" style="background:var(--vp)"></i>V′</span>
+      </div>
+    </div>
+    <div class="side">
+      <section class="card panel">
+        <h2>Vector values</h2>
+        <div class="vectors">
+          <div class="vecbox"><div class="vecname" style="color:var(--u)">U</div><div id="uMat"></div></div>
+          <div class="vecbox"><div class="vecname" style="color:var(--v)">V</div><div id="vMat"></div></div>
+          <div class="vecbox"><div class="vecname" style="color:var(--up)">U′</div><div id="upMat" class="muted">—</div></div>
+          <div class="vecbox"><div class="vecname" style="color:var(--vp)">V′</div><div id="vpMat" class="muted">—</div></div>
+        </div>
+      </section>
+      <section class="card panel steps-panel">
+        <h2>Steps</h2>
+        <div class="steps">
+          <div id="stepTitle" class="step-title">Ready to begin</div>
+          <div id="stepText" class="step-text">Begin by clicking <b>Orthogonalization Process</b>.</div>
+          <div id="equation" class="equation" style="display:none"></div>
+          <div id="hint" class="hint">Before starting, U and V can be freely repositioned.</div>
+        </div>
+        <div class="controls">
+          <button id="startBtn" class="primary">Orthogonalization Process</button>
+          <button id="resetBtn" class="secondary">Reset Process</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+<script>
+(() => {
+const c=document.getElementById('graph'),ctx=c.getContext('2d');
+const $=id=>document.getElementById(id), els={uMat:$('uMat'),vMat:$('vMat'),upMat:$('upMat'),vpMat:$('vpMat'),title:$('stepTitle'),text:$('stepText'),eq:$('equation'),hint:$('hint')};
+const RANGE=3, SNAP=.16, HIT=.18;
+let U,V,Up=null,Vp=null,phase='setup',drag=null,choice=null,projectTarget=null,projectBase=null,projectPoint=null,normDone={projected:false,base:false};
+const mag=a=>Math.hypot(a.x,a.y), dot=(a,b)=>a.x*b.x+a.y*b.y, scale=(a,s)=>({x:a.x*s,y:a.y*s}), sub=(a,b)=>({x:a.x-b.x,y:a.y-b.y}), dist=(a,b)=>mag(sub(a,b)), unit=a=>scale(a,1/mag(a));
+function randomVec(){let a,m;do{a=Math.random()*Math.PI*2;m=1.3+Math.random()*1.5;}while(m>=2.8);return {x:Math.cos(a)*m,y:Math.sin(a)*m};}
+function reset(){ do{U=randomVec();V=randomVec();}while(Math.abs(dot(unit(U),unit(V)))>.92); Up=Vp=null; phase='setup';drag=choice=projectTarget=projectBase=projectPoint=null;normDone={projected:false,base:false}; $('startBtn').disabled=false;$('startBtn').style.opacity=1; setStep('Ready to begin','Begin by clicking <b>Orthogonalization Process</b>.','Before starting, U and V can be freely repositioned.');update(); }
+function setStep(t,s,h='',eq=''){els.title.innerHTML=t;els.text.innerHTML=s;els.hint.innerHTML=h;els.eq.style.display=eq?'block':'none';els.eq.innerHTML=eq;}
+function mat(a){return `<span class="matrix"><span>${a.x.toFixed(2)}</span><span>${a.y.toFixed(2)}</span></span>`}
+function updateMats(){els.uMat.innerHTML=mat(U);els.vMat.innerHTML=mat(V);els.upMat.innerHTML=Up?mat(Up):'—';els.vpMat.innerHTML=Vp?mat(Vp):'—';els.upMat.className=Up?'':'muted';els.vpMat.className=Vp?'':'muted';}
+function xyToPx(p){return {x:(p.x+RANGE)/(2*RANGE)*c.width,y:(RANGE-p.y)/(2*RANGE)*c.height};}
+function pxToXy(x,y){let r=c.getBoundingClientRect(),px=(x-r.left)*c.width/r.width,py=(y-r.top)*c.height/r.height;return {x:px/c.width*2*RANGE-RANGE,y:RANGE-py/c.height*2*RANGE};}
+function arrow(a,color,label,dashed=false,alpha=1){let o=xyToPx({x:0,y:0}),p=xyToPx(a),ang=Math.atan2(p.y-o.y,p.x-o.x);ctx.save();ctx.globalAlpha=alpha;ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=5;ctx.lineCap='round';if(dashed)ctx.setLineDash([10,8]);ctx.beginPath();ctx.moveTo(o.x,o.y);ctx.lineTo(p.x,p.y);ctx.stroke();ctx.setLineDash([]);ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x-18*Math.cos(ang-.48),p.y-18*Math.sin(ang-.48));ctx.lineTo(p.x-18*Math.cos(ang+.48),p.y-18*Math.sin(ang+.48));ctx.closePath();ctx.fill();ctx.font='700 20px system-ui';ctx.fillText(label,p.x+10,p.y-10);ctx.restore();}
+function lineThrough(dir,color='#8e96a8'){let d=unit(dir),A=xyToPx(scale(d,-5)),B=xyToPx(scale(d,5));ctx.save();ctx.strokeStyle=color;ctx.lineWidth=2;ctx.setLineDash([8,8]);ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.lineTo(B.x,B.y);ctx.stroke();ctx.restore();}
+function segment(a,b,color='#8e96a8'){a=xyToPx(a);b=xyToPx(b);ctx.save();ctx.strokeStyle=color;ctx.lineWidth=2;ctx.setLineDash([8,8]);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.restore();}
+function circleAt(a,color){let p=xyToPx(a),r=c.width/(2*RANGE);ctx.save();ctx.strokeStyle=color;ctx.globalAlpha=.28;ctx.lineWidth=8;ctx.beginPath();ctx.arc(p.x,p.y,13,0,Math.PI*2);ctx.stroke();ctx.restore();}
+function draw(){ctx.clearRect(0,0,c.width,c.height);let s=c.width/(2*RANGE);ctx.font='14px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';for(let i=-RANGE;i<=RANGE;i++){let x=xyToPx({x:i,y:0}).x,y=xyToPx({x:0,y:i}).y;ctx.strokeStyle=i===0?'#7b8496':'#dce2ec';ctx.lineWidth=i===0?2:1;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,c.height);ctx.stroke();ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(c.width,y);ctx.stroke();if(i!==0){ctx.fillStyle='#7b8496';ctx.fillText(i,x,xyToPx({x:0,y:0}).y+18);ctx.fillText(i,xyToPx({x:0,y:0}).x-18,y);}}
+ if(projectBase&&phase!=='setup'&&phase!=='choose'){lineThrough(projectBase);segment(projectTarget,projectPoint);let pp=xyToPx(projectPoint);ctx.fillStyle='#8e96a8';ctx.beginPath();ctx.arc(pp.x,pp.y,6,0,Math.PI*2);ctx.fill();}
+ arrow(U,'#e55353','U',false,phase==='setup'?1:.38);arrow(V,'#3b73e6','V',false,phase==='setup'?1:.38);
+ if(Up)arrow(Up,'#b52d2d','U′'); if(Vp)arrow(Vp,'#2451ad','V′');
+ if(phase==='normalize'){circleAt(unit(projectPoint),choice==='U'?'#b52d2d':'#2451ad');circleAt(unit(projectBase),choice==='U'?'#2451ad':'#b52d2d');}
+}
+function update(){updateMats();draw();}
+function start(){phase='choose';$('startBtn').disabled=true;$('startBtn').style.opacity=.55;setStep('Choose a vector','Click and drag either <b>U</b> or <b>V</b> to begin Orthogonalization.','The original vectors are now locked. Dragging one creates its primed vector.');update();}
+function beginProjection(which){choice=which;projectTarget=which==='U'?U:V;projectBase=which==='U'?V:U;let coeff=dot(projectTarget,projectBase)/dot(projectBase,projectBase);projectPoint=sub(projectTarget,scale(projectBase,coeff));if(which==='U')Up={...projectTarget};else Vp={...projectTarget};phase='project';let A=which, B=which==='U'?'V':'U';setStep(`Project ${A} orthogonally`,`Drag <b>${A}′</b> along the dotted perpendicular guide until it reaches the intersection.`,`It will snap into place when you are close enough.`,`${A}′ = ${A} − proj<sub>${B}</sub>(${A})<br>proj<sub>${B}</sub>(${A}) = ((${A}·${B}) / (${B}·${B})) ${B}`);update();}
+function projectedObj(){return choice==='U'?Up:Vp} function setProjected(p){if(choice==='U')Up=p;else Vp=p}
+function basePrimeObj(){return choice==='U'?Vp:Up} function setBasePrime(p){if(choice==='U')Vp=p;else Up=p}
+function completeProjection(){setProjected({...projectPoint});phase='normalize';let A=choice,B=choice==='U'?'V':'U';setStep('Projection complete — normalize',`Great! <b>${A}′</b> is orthogonal to <b>${B}</b>. Now normalize both resulting vectors.`,`Drag ${A}′ to its unit-circle marker. Drag ${B} to create ${B}′ and move it to its marker.`,`ê₁ = ${A}′ / ‖${A}′‖ &nbsp;&nbsp; and &nbsp;&nbsp; ê₂ = ${B} / ‖${B}‖`);update();}
+function normalizeCheck(kind,p){let target=kind==='projected'?unit(projectPoint):unit(projectBase);if(dist(p,target)<SNAP){if(kind==='projected')setProjected(target);else setBasePrime(target);normDone[kind]=true;if(normDone.projected&&normDone.base){phase='complete';setStep('<span class="status">Complete!</span>','You have successfully performed Orthogonalization.','U′ and V′ now form an orthonormal basis.');}update();return true}return false}
+function pointerDown(e){let p=pxToXy(e.clientX,e.clientY); if(phase==='setup'){if(dist(p,U)<HIT)drag='U';else if(dist(p,V)<HIT)drag='V';}
+ else if(phase==='choose'){if(dist(p,U)<HIT){beginProjection('U');drag='projected'}else if(dist(p,V)<HIT){beginProjection('V');drag='projected'}}
+ else if(phase==='project'&&dist(p,projectedObj())<HIT)drag='projected';
+ else if(phase==='normalize'){if(dist(p,projectedObj())<HIT)drag='projectedNorm';else if(basePrimeObj()&&dist(p,basePrimeObj())<HIT)drag='baseNorm';else if(dist(p,projectBase)<HIT){setBasePrime({...projectBase});drag='baseNorm';update();}}
+ if(drag)c.setPointerCapture(e.pointerId);}
+function pointerMove(e){if(!drag)return;let p=pxToXy(e.clientX,e.clientY);p.x=Math.max(-RANGE,Math.min(RANGE,p.x));p.y=Math.max(-RANGE,Math.min(RANGE,p.y));
+ if(drag==='U'){if(mag(p)>.15)U=p} else if(drag==='V'){if(mag(p)>.15)V=p}
+ else if(drag==='projected'){let d=unit(projectTarget),t=dot(p,d);let constrained=scale(d,Math.max(-3.8,Math.min(3.8,t)));setProjected(constrained);if(dist(constrained,projectPoint)<SNAP){completeProjection();drag=null;}}
+ else if(drag==='projectedNorm'){let d=unit(projectPoint),t=Math.max(.15,dot(p,d));let q=scale(d,t);setProjected(q);normalizeCheck('projected',q)}
+ else if(drag==='baseNorm'){let d=unit(projectBase),t=Math.max(.15,dot(p,d));let q=scale(d,t);setBasePrime(q);normalizeCheck('base',q)} update();}
+function pointerUp(){drag=null}
+c.addEventListener('pointerdown',pointerDown);c.addEventListener('pointermove',pointerMove);c.addEventListener('pointerup',pointerUp);c.addEventListener('pointercancel',pointerUp);$('startBtn').onclick=start;$('resetBtn').onclick=reset;window.addEventListener('resize',draw);reset();
+})();
+</script>
+</body>
+</html>
