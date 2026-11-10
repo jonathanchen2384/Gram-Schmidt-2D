@@ -98,7 +98,7 @@ function lineThrough(dir,color='#8e96a8'){let d=unit(dir),A=xyToPx(scale(d,-5)),
 function segment(a,b,color='#8e96a8'){a=xyToPx(a);b=xyToPx(b);ctx.save();ctx.strokeStyle=color;ctx.lineWidth=2;ctx.setLineDash([8,8]);ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();ctx.restore();}
 function circleAt(a,color){let p=xyToPx(a),r=c.width/(2*RANGE);ctx.save();ctx.strokeStyle=color;ctx.globalAlpha=.28;ctx.lineWidth=8;ctx.beginPath();ctx.arc(p.x,p.y,13,0,Math.PI*2);ctx.stroke();ctx.restore();}
 function draw(){ctx.clearRect(0,0,c.width,c.height);let s=c.width/(2*RANGE);ctx.font='14px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';for(let i=-RANGE;i<=RANGE;i++){let x=xyToPx({x:i,y:0}).x,y=xyToPx({x:0,y:i}).y;ctx.strokeStyle=i===0?'#7b8496':'#dce2ec';ctx.lineWidth=i===0?2:1;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,c.height);ctx.stroke();ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(c.width,y);ctx.stroke();if(i!==0){ctx.fillStyle='#7b8496';ctx.fillText(i,x,xyToPx({x:0,y:0}).y+18);ctx.fillText(i,xyToPx({x:0,y:0}).x-18,y);}}
- if(projectBase&&phase!=='setup'&&phase!=='choose'){lineThrough(projectBase);segment(projectTarget,projectPoint);let pp=xyToPx(projectPoint);ctx.fillStyle='#8e96a8';ctx.beginPath();ctx.arc(pp.x,pp.y,6,0,Math.PI*2);ctx.fill();}
+ if(projectBase&&phase!=='setup'&&phase!=='choose'){let perp={x:-projectBase.y,y:projectBase.x};lineThrough(perp);segment(projectTarget,projectPoint);let pp=xyToPx(projectPoint);ctx.fillStyle='#8e96a8';ctx.beginPath();ctx.arc(pp.x,pp.y,6,0,Math.PI*2);ctx.fill();}
  arrow(U,'#e55353','U',false,phase==='setup'?1:.38);arrow(V,'#3b73e6','V',false,phase==='setup'?1:.38);
  if(Up)arrow(Up,'#b52d2d','U′'); if(Vp)arrow(Vp,'#2451ad','V′');
  if(phase==='normalize'){circleAt(unit(projectPoint),choice==='U'?'#b52d2d':'#2451ad');circleAt(unit(projectBase),choice==='U'?'#2451ad':'#b52d2d');}
@@ -117,7 +117,7 @@ function pointerDown(e){let p=pxToXy(e.clientX,e.clientY); if(phase==='setup'){i
  if(drag)c.setPointerCapture(e.pointerId);}
 function pointerMove(e){if(!drag)return;let p=pxToXy(e.clientX,e.clientY);p.x=Math.max(-RANGE,Math.min(RANGE,p.x));p.y=Math.max(-RANGE,Math.min(RANGE,p.y));
  if(drag==='U'){if(mag(p)>.15)U=p} else if(drag==='V'){if(mag(p)>.15)V=p}
- else if(drag==='projected'){let d=unit(projectTarget),t=dot(p,d);let constrained=scale(d,Math.max(-3.8,Math.min(3.8,t)));setProjected(constrained);if(dist(constrained,projectPoint)<SNAP){completeProjection();drag=null;}}
+ else if(drag==='projected'){let path=sub(projectPoint,projectTarget),len2=dot(path,path),t=len2?dot(sub(p,projectTarget),path)/len2:1;t=Math.max(0,Math.min(1,t));let constrained={x:projectTarget.x+path.x*t,y:projectTarget.y+path.y*t};setProjected(constrained);if(dist(constrained,projectPoint)<SNAP){completeProjection();drag=null;}}
  else if(drag==='projectedNorm'){let d=unit(projectPoint),t=Math.max(.15,dot(p,d));let q=scale(d,t);setProjected(q);normalizeCheck('projected',q)}
  else if(drag==='baseNorm'){let d=unit(projectBase),t=Math.max(.15,dot(p,d));let q=scale(d,t);setBasePrime(q);normalizeCheck('base',q)} update();}
 function pointerUp(){drag=null}
