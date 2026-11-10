@@ -11,15 +11,15 @@
   html, body { min-height:100%; background:var(--bg); }
   html { min-height:100vh; }
   body { margin:0; min-height:100vh; font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif; background:var(--bg); color:var(--ink); transition:background .2s,color .2s; }
-  .page { max-width:1180px; margin:auto; padding:28px 20px 44px; }
+  .page { max-width:918px; margin:auto; padding:20.4px 15.3px 32.3px; }
   h1 { margin:0; font-size:clamp(26px,4vw,40px); letter-spacing:-.03em; }
   .subtitle { color:var(--muted); margin:8px 0 24px; }
-  .layout { display:grid; grid-template-columns:minmax(0, 1fr) 320px; gap:20px; align-items:start; }
+  .layout { display:grid; grid-template-columns:minmax(0, 1fr) 255px; gap:15.3px; align-items:start; }
   .card { background:var(--card); border:1px solid var(--border); border-radius:18px; box-shadow:0 8px 30px rgba(30,45,80,.07); }
-  .graph-card { padding:14px; }
+  .graph-card { padding:10.2px; }
   canvas { display:block; width:100%; aspect-ratio:1/1; border-radius:12px; background:var(--canvas); touch-action:none; cursor:crosshair; }
-  .side { display:grid; gap:16px; }
-  .panel { padding:18px; }
+  .side { display:grid; gap:11.9px; }
+  .panel { padding:13.6px; }
   .panel h2 { font-size:17px; margin:0 0 14px; }
   .vectors { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   .vecbox { border:1px solid var(--border); border-radius:12px; padding:11px; }
@@ -60,26 +60,6 @@
       </div>
     </div>
     <div class="side">
-      <section class="card panel theme-panel">
-        <h2>Appearance</h2>
-        <button id="themeToggle" class="secondary" type="button" aria-pressed="true">☀️ Light mode</button>
-        <div class="visibility-controls" aria-label="Graph visibility controls">
-          <button id="toggleU" class="visibility-toggle" type="button" aria-pressed="true">U: On</button>
-          <button id="toggleV" class="visibility-toggle" type="button" aria-pressed="true">V: On</button>
-          <button id="toggleUp" class="visibility-toggle" type="button" aria-pressed="true">U′: On</button>
-          <button id="toggleVp" class="visibility-toggle" type="button" aria-pressed="true">V′: On</button>
-          <button id="toggleGuides" class="visibility-toggle" type="button" aria-pressed="true" style="grid-column:1/-1">Dotted lines: On</button>
-        </div>
-      </section>
-      <section class="card panel">
-        <h2>Vector values</h2>
-        <div class="vectors">
-          <div class="vecbox"><div class="vecname" style="color:var(--u)">U</div><div id="uMat"></div></div>
-          <div class="vecbox"><div class="vecname" style="color:var(--v)">V</div><div id="vMat"></div></div>
-          <div class="vecbox"><div class="vecname" style="color:var(--up)">U′</div><div id="upMat" class="muted">—</div></div>
-          <div class="vecbox"><div class="vecname" style="color:var(--vp)">V′</div><div id="vpMat" class="muted">—</div></div>
-        </div>
-      </section>
       <section class="card panel steps-panel">
         <h2>Steps</h2>
         <div class="steps">
@@ -91,6 +71,26 @@
         <div class="controls">
           <button id="startBtn" class="primary">Orthogonalization Process</button>
           <button id="resetBtn" class="secondary">Reset Process</button>
+        </div>
+      </section>
+      <section class="card panel">
+        <h2>Vector values</h2>
+        <div class="vectors">
+          <div class="vecbox"><div class="vecname" style="color:var(--u)">U</div><div id="uMat"></div></div>
+          <div class="vecbox"><div class="vecname" style="color:var(--v)">V</div><div id="vMat"></div></div>
+          <div class="vecbox"><div class="vecname" style="color:var(--up)">U′</div><div id="upMat" class="muted">—</div></div>
+          <div class="vecbox"><div class="vecname" style="color:var(--vp)">V′</div><div id="vpMat" class="muted">—</div></div>
+        </div>
+      </section>
+      <section class="card panel theme-panel">
+        <h2>Appearance</h2>
+        <button id="themeToggle" class="secondary" type="button" aria-pressed="true">☀️ Light mode</button>
+        <div class="visibility-controls" aria-label="Graph visibility controls">
+          <button id="toggleU" class="visibility-toggle" type="button" aria-pressed="true">U: On</button>
+          <button id="toggleV" class="visibility-toggle" type="button" aria-pressed="true">V: On</button>
+          <button id="toggleUp" class="visibility-toggle" type="button" aria-pressed="true">U′: On</button>
+          <button id="toggleVp" class="visibility-toggle" type="button" aria-pressed="true">V′: On</button>
+          <button id="toggleGuides" class="visibility-toggle" type="button" aria-pressed="true" style="grid-column:1/-1">Dotted lines: On</button>
         </div>
       </section>
     </div>
